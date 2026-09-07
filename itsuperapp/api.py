@@ -33,7 +33,7 @@ def development_baseline_status() -> dict[str, Any]:
 	try:
 		db_name = frappe.db.sql("select database()", as_list=True)[0][0]
 		result["frappe_mariadb"] = {"ok": True, "database": db_name}
-	except Exception as exc:  # noqa: BLE001 - smoke test, report any failure
+	except Exception as exc:
 		result["frappe_mariadb"] = {"ok": False, "error": str(exc)}
 
 	# 2. Shared AI layer (LangGraph) importable and usable from Frappe context.
@@ -42,7 +42,7 @@ def development_baseline_status() -> dict[str, Any]:
 
 		graph = new_workflow_graph()
 		result["ai_layer"] = {"ok": True, "graph_type": type(graph).__name__}
-	except Exception as exc:  # noqa: BLE001
+	except Exception as exc:
 		result["ai_layer"] = {"ok": False, "error": str(exc)}
 
 	# 3. Dedicated Supabase reachability (ADR 0005) -- TCP connect only, no
