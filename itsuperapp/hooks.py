@@ -73,6 +73,16 @@ app_license = "mit"
 # automatically load and sync documents of this doctype from downstream apps
 # importable_doctypes = [doctype_1]
 
+# Website route rules
+# --------------------
+# Route ITSUPERAPP's custom Frappe UI frontend (Vue 3 SPA, see ADR 0006) at
+# /frontend and all of its client-side sub-routes to the same built
+# frontend.html shell, so Vue Router's history-mode navigation works on a
+# full page load/refresh.
+website_route_rules = [
+	{"from_route": "/frontend/<path:app_path>", "to_route": "frontend"},
+]
+
 # Jinja
 # ----------
 
