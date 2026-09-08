@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ColorModeToggleIcon: typeof import('./src/components/ColorModeToggleIcon.vue')['default']
     JastelLogo: typeof import('./src/components/JastelLogo.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

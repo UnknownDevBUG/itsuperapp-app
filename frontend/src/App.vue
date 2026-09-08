@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { FeatherIcon } from 'frappe-ui'
 import JastelLogo from '@/components/JastelLogo.vue'
+import ColorModeToggleIcon from '@/components/ColorModeToggleIcon.vue'
 import { useColorMode } from '@/composables/useColorMode'
 
 const route = useRoute()
@@ -16,11 +16,6 @@ const colorModeLabel: Record<typeof preference.value, string> = {
 	light: 'Light',
 	dark: 'Dark',
 	system: 'System',
-}
-const colorModeIcon: Record<typeof preference.value, string> = {
-	light: 'sun',
-	dark: 'moon',
-	system: 'monitor',
 }
 </script>
 
@@ -59,7 +54,7 @@ const colorModeIcon: Record<typeof preference.value, string> = {
 					:title="`Color mode: ${colorModeLabel[preference]} (click to cycle)`"
 					@click="cyclePreference"
 				>
-					<FeatherIcon :name="colorModeIcon[preference]" class="h-4 w-4" aria-hidden="true" />
+					<ColorModeToggleIcon :mode="preference" class="h-4 w-4 shrink-0" />
 					<span>{{ colorModeLabel[preference] }}</span>
 				</button>
 			</header>
