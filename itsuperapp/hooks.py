@@ -10,16 +10,20 @@ app_license = "mit"
 
 # required_apps = []
 
-# Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "itsuperapp",
-# 		"logo": "/assets/itsuperapp/logo.png",
-# 		"title": "ITSUPERAPP",
-# 		"route": "/itsuperapp",
-# 		"has_permission": "itsuperapp.api.permission.has_app_permission"
-# 	}
-# ]
+# Each item in the list will be shown as an app in the apps page.
+# Also registers ITSUPERAPP's own logo/title so Frappe's app switcher and
+# loading/splash screen show the JasTel brand instead of falling back to
+# the ERPNext default (there was no registered app here before, so Frappe's
+# apps_data only listed erpnext -- see GH issue "splash logo not branded").
+add_to_apps_screen = [
+	{
+		"name": "itsuperapp",
+		"logo": "/assets/itsuperapp/logo.png",
+		"title": "ITSUPERAPP",
+		"route": "/frontend",
+		"has_permission": "itsuperapp.permission.has_app_permission",
+	}
+]
 
 # Includes in <head>
 # ------------------
