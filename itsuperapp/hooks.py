@@ -56,8 +56,12 @@ app_license = "mit"
 # Home Pages
 # ----------
 
-# application home page (will override Website Settings)
-# home_page = "login"
+# application home page (will override Website Settings). Route root "/" to
+# ITSUPERAPP's custom Frappe UI frontend (Vue 3 SPA, ADR 0006) instead of
+# Frappe's default /login + Desk, since Frappe resolves root "/" via
+# get_home_page() (this hook) rather than website_route_rules -- the
+# route rule below only applies once path != "index" (i.e. not root).
+home_page = "frontend"
 
 # website user home page (by Role)
 # role_home_page = {
@@ -78,7 +82,8 @@ app_license = "mit"
 # Route ITSUPERAPP's custom Frappe UI frontend (Vue 3 SPA, see ADR 0006) at
 # /frontend and all of its client-side sub-routes to the same built
 # frontend.html shell, so Vue Router's history-mode navigation works on a
-# full page load/refresh.
+# full page load/refresh. Root "/" is handled separately via the home_page
+# hook above (Frappe resolves root through get_home_page(), not this map).
 website_route_rules = [
 	{"from_route": "/frontend/<path:app_path>", "to_route": "frontend"},
 ]
