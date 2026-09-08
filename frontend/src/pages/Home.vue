@@ -13,10 +13,10 @@ const ping = createResource({
 
 <template>
 	<div class="mx-auto max-w-3xl py-12">
-		<h1 class="mb-4 text-lg font-semibold text-gray-900">ITSUPERAPP</h1>
-		<p class="mb-6 text-sm text-gray-500">
+		<h1 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">ITSUPERAPP</h1>
+		<p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
 			Frontend shell scaffold (ADR 0006). No domain module UI yet.
 		</p>
-		<pre class="rounded bg-gray-100 p-4 text-xs">{{ ping.data }}</pre>
+		<pre class="rounded bg-gray-100 p-4 text-xs dark:bg-gray-800 dark:text-gray-200">{{ ping.data }}</pre>
 	</div>
 </template>

@@ -33,8 +33,10 @@ async function handleLogin() {
 </script>
 
 <template>
-	<div class="flex min-h-screen items-center justify-center bg-gray-50">
-		<div class="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+	<div class="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+		<div
+			class="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-800 dark:bg-gray-950"
+		>
 			<div class="mb-8 flex justify-center">
 				<JastelLogo :height="48" />
 			</div>

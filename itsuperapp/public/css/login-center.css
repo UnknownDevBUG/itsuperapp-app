@@ -1,0 +1,21 @@
+/* Frappe Desk's built-in login family pages (/login, /forgot, /signup, ...)
+ * only center their page-card horizontally (`margin: 0 auto` in Frappe's
+ * own website.bundle.css) -- on a tall viewport the card stays pinned near
+ * the top instead of sitting in the vertical middle of the screen. This is
+ * a small override, not a Frappe core patch, loaded via `web_include_css`
+ * (see hooks.py) so it survives upgrades/rebuilds. Scope is limited to the
+ * exact page-card family classes Frappe itself uses (see
+ * frappe/public/css/website.bundle.css `.for-login .page-card` etc.) so it
+ * cannot affect unrelated website pages. */
+.page_content:has(.for-login),
+.page_content:has(.for-forgot),
+.page_content:has(.for-login-with-email-link),
+.page_content:has(.for-signup),
+.page_content:has(.for-email-login),
+.page_content:has(.for-reset-password) {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: calc(100vh - 60px);
+}
