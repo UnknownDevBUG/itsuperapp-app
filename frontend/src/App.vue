@@ -25,7 +25,7 @@ const colorModeLabel: Record<typeof preference.value, string> = {
 
 	<div v-else class="flex min-h-screen bg-gray-50 dark:bg-gray-900">
 		<aside
-			class="flex w-60 flex-shrink-0 flex-col border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950"
+			class="flex w-60 flex-shrink-0 flex-col border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-black"
 		>
 			<div class="flex items-center border-b border-gray-100 px-4 py-4 dark:border-gray-800">
 				<JastelLogo :height="32" clip-orbit />
@@ -45,7 +45,7 @@ const colorModeLabel: Record<typeof preference.value, string> = {
 
 		<div class="flex flex-1 flex-col">
 			<header
-				class="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-6 dark:border-gray-800 dark:bg-gray-950"
+				class="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-6 dark:border-gray-800 dark:bg-black"
 			>
 				<span class="text-sm font-medium text-gray-600 dark:text-gray-300">ITSUPERAPP</span>
 				<button

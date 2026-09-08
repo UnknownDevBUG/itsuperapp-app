@@ -29,5 +29,11 @@ export default defineConfig({
     // the dev server outright -- excluding frappe-ui here skips the scan;
     // Vite still serves it correctly at request time via the real plugin.
     exclude: ["frappe-ui"],
+    // Some frappe-ui modules import CommonJS packages as default exports.
+    // Because frappe-ui itself is excluded above, Vite does not discover and
+    // wrap these transitive dependencies automatically in dev mode. Pre-bundle
+    // only those CJS boundaries so dev interop matches the working production
+    // bundle without scanning the full frappe-ui barrel.
+    include: ["feather-icons", "debug"],
   },
 });
