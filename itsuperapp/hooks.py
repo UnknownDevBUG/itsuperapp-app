@@ -101,7 +101,7 @@ website_route_rules = [
 # ------------
 
 # before_install = "itsuperapp.install.before_install"
-# after_install = "itsuperapp.install.after_install"
+after_install = "itsuperapp.install.after_install"
 
 # Uninstallation
 # ------------
