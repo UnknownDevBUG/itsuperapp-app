@@ -1,0 +1,166 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "field_order": [
+  "flow_run",
+  "step_index",
+  "node_id",
+  "node_type",
+  "column_break_step_core",
+  "status",
+  "attempt",
+  "duration_ms",
+  "section_break_step_timing",
+  "started_at",
+  "finished_at",
+  "section_break_step_data",
+  "input_snapshot",
+  "column_break_step_data",
+  "output_snapshot",
+  "error"
+ ],
+ "fields": [
+  {
+   "fieldname": "flow_run",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Flow Run",
+   "options": "Flow Run",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "0-based position in this run's execution order (not the graph's authoring order -- a branch may skip indices).",
+   "fieldname": "step_index",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Step Index",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "node_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Node Id",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "Resolved via the canonical registry's get_executor() (issue #61) -- never a duplicate node-type list.",
+   "fieldname": "node_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Node Type",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_step_core",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Queued",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Queued\nRunning\nWaiting\nSuccess\nFailed\nSkipped\nCancelled",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "description": "Retry attempt number for this step (1 = first attempt). Persisted so retry history is auditable, not just the final outcome.",
+   "fieldname": "attempt",
+   "fieldtype": "Int",
+   "label": "Attempt",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "duration_ms",
+   "fieldtype": "Int",
+   "label": "Duration (ms)",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_step_timing",
+   "fieldtype": "Section Break",
+   "label": "Timing"
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "finished_at",
+   "fieldtype": "Datetime",
+   "label": "Finished At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_step_data",
+   "fieldtype": "Section Break",
+   "label": "Step Data"
+  },
+  {
+   "fieldname": "input_snapshot",
+   "fieldtype": "JSON",
+   "label": "Input Snapshot",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_step_data",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "output_snapshot",
+   "fieldtype": "JSON",
+   "label": "Output Snapshot",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Small Text",
+   "label": "Error",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITSUPERAPP",
+ "name": "Flow Run Step",
+ "naming_rule": "Random",
+ "autoname": "hash",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1
+}

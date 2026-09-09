@@ -1,0 +1,167 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "field_order": [
+  "flow_version",
+  "source",
+  "status",
+  "execution_identity",
+  "column_break_run_core",
+  "started_at",
+  "finished_at",
+  "section_break_trigger",
+  "trigger_doctype",
+  "trigger_reference",
+  "section_break_run_data",
+  "config_snapshot",
+  "input",
+  "column_break_run_data",
+  "output",
+  "error"
+ ],
+ "fields": [
+  {
+   "fieldname": "flow_version",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Flow Version",
+   "options": "Flow Version",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "default": "Manual",
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Source",
+   "options": "Manual\nDocType Event\nSchedule\nWebhook",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "default": "Queued",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Queued\nRunning\nWaiting\nSuccess\nFailed\nCancelled",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "The resolved execution identity this run executes as -- never Administrator, never implicit. See itsuperapp.agent_flow.identity.",
+   "fieldname": "execution_identity",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Execution Identity",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_run_core",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "finished_at",
+   "fieldtype": "Datetime",
+   "label": "Finished At",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_trigger",
+   "fieldtype": "Section Break",
+   "label": "Trigger Reference"
+  },
+  {
+   "description": "Not used by the Manual source (Wave 2's only wired trigger); schema-complete for future DocType Event/Schedule/Webhook triggers.",
+   "fieldname": "trigger_doctype",
+   "fieldtype": "Link",
+   "label": "Trigger DocType",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "trigger_reference",
+   "fieldtype": "Dynamic Link",
+   "label": "Trigger Reference",
+   "options": "trigger_doctype",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_run_data",
+   "fieldtype": "Section Break",
+   "label": "Run Data"
+  },
+  {
+   "description": "Captured at run start (e.g. the Manual Run API's caller-supplied config) so later edits to the Definition/Version don't retroactively change what this run is understood to have done.",
+   "fieldname": "config_snapshot",
+   "fieldtype": "JSON",
+   "label": "Config Snapshot",
+   "read_only": 1
+  },
+  {
+   "fieldname": "input",
+   "fieldtype": "JSON",
+   "label": "Input",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_run_data",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "output",
+   "fieldtype": "JSON",
+   "label": "Output",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Small Text",
+   "label": "Error",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITSUPERAPP",
+ "name": "Flow Run",
+ "naming_rule": "Random",
+ "autoname": "hash",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

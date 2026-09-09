@@ -4,6 +4,13 @@ Registered by default via the `agent_flow_nodes` hook in this app's
 hooks.py -- proof that hook-based loading populates the registry, not a
 statement that `noop`/`set_variable` are real, supported node types for
 end users.
+
+Executor contract (issue #48): `execute(context, config)` returns
+`{"context": <dict>, "port": <str, default "out">}`, may raise
+`itsuperapp.agent_flow.runtime.NodeWaiting` to pause the run, or raise
+any other exception to signal failure (subject to the run's retry/
+on_error policy). These two nodes were left as passthrough stubs by
+issue #61 specifically for #48 to complete this contract against.
 """
 
 from __future__ import annotations
@@ -24,11 +31,9 @@ from itsuperapp.agent_flow.node_registry import node
 	capabilities=[],
 )
 class NoopNode:
-	"""Executor stub: no runtime engine exists yet (issue #48)."""
-
 	@staticmethod
-	def execute(context: dict[str, Any]) -> dict[str, Any]:
-		return context
+	def execute(context: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+		return {"context": context, "port": "out"}
 
 
 @node(
@@ -45,8 +50,10 @@ class NoopNode:
 	capabilities=[],
 )
 class SetVariableNode:
-	"""Executor stub: no runtime engine exists yet (issue #48)."""
-
 	@staticmethod
-	def execute(context: dict[str, Any]) -> dict[str, Any]:
-		return context
+	def execute(context: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+		new_context = dict(context)
+		variable_name = config.get("variable_name")
+		if variable_name:
+			new_context[variable_name] = config.get("value")
+		return {"context": new_context, "port": "out"}
