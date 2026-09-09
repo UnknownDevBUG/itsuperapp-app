@@ -191,6 +191,17 @@ after_install = "itsuperapp.install.after_install"
 # 	],
 # }
 
+# Agent Flow node registry
+# ------------------------
+# Dotted module paths that register node types via
+# itsuperapp.agent_flow.node_registry.node when imported. Any installed
+# app can extend this same hook key in its own hooks.py to add node
+# types without editing a central file (see issue #61 / ADR 0012).
+
+agent_flow_nodes = [
+	"itsuperapp.agent_flow.nodes.example_nodes",
+]
+
 # Testing
 # -------
 
