@@ -1,0 +1,101 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:flow_name",
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "field_order": [
+  "flow_name",
+  "column_break_name",
+  "schema_version",
+  "section_break_graph",
+  "nodes",
+  "edges",
+  "column_break_graph",
+  "viewport",
+  "settings"
+ ],
+ "fields": [
+  {
+   "fieldname": "flow_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Flow Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_name",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Bumped on a breaking change to the nodes/edges JSON shape itself, so a future migration can tell which shape a stored record uses.",
+   "fieldname": "schema_version",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Schema Version",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_graph",
+   "fieldtype": "Section Break",
+   "label": "Graph"
+  },
+  {
+   "fieldname": "nodes",
+   "fieldtype": "JSON",
+   "label": "Nodes"
+  },
+  {
+   "fieldname": "edges",
+   "fieldtype": "JSON",
+   "label": "Edges"
+  },
+  {
+   "fieldname": "column_break_graph",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "UI convenience only (pan/zoom position) -- never read by validation or execution.",
+   "fieldname": "viewport",
+   "fieldtype": "JSON",
+   "label": "Viewport"
+  },
+  {
+   "description": "on_error policy, max_steps, default retry policy.",
+   "fieldname": "settings",
+   "fieldtype": "JSON",
+   "label": "Settings"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITSUPERAPP",
+ "name": "Flow Definition",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
