@@ -54,6 +54,7 @@ DEFAULT_MAX_STEPS = 100
 DEFAULT_RETRY_ATTEMPTS = 0
 DEFAULT_RETRY_DELAY_MS = 0
 MAX_RETRY_DELAY_MS = 30_000
+MAX_RETRY_ATTEMPTS = 10  # bounds a node config's own retry_attempts -- a runaway-retry circuit breaker
 RESUMABLE_ROLES = frozenset({"System Manager"})
 
 
@@ -266,7 +267,7 @@ def _execute_node_with_retry(
 		operation="execute",
 	)
 	executor = get_executor(node_type)
-	retry_attempts = config.get("retry_attempts", DEFAULT_RETRY_ATTEMPTS)
+	retry_attempts = min(config.get("retry_attempts", DEFAULT_RETRY_ATTEMPTS), MAX_RETRY_ATTEMPTS)
 	retry_delay_ms = config.get("retry_delay_ms", DEFAULT_RETRY_DELAY_MS)
 
 	last_error: Exception | None = None
