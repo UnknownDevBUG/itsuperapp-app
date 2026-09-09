@@ -54,3 +54,21 @@ def resume_flow_run_with_token(run_name: str, token: str) -> None:
 	authenticated (non-Guest) session; the token itself, not the caller's
 	own roles, authorizes this specific resume."""
 	_resume_flow_run_with_token(run_name, token)
+
+
+@frappe.whitelist()
+def create_flow_definition(flow_name: str) -> str:
+	"""Create a new Flow Definition for Studio's "create new" picker
+	(issue #60), seeded with a single `noop` node -- Flow Definition's own
+	validate() (issue #59) requires a non-empty graph, so an entirely
+	empty flow cannot be saved; this is the minimal graph that satisfies
+	it, not a Studio-side relaxation of that server-side rule."""
+	doc = frappe.new_doc("Flow Definition")
+	doc.flow_name = flow_name
+	doc.schema_version = 1
+	doc.nodes = [{"id": "n1", "type": "noop", "position": {"x": 100, "y": 100}, "config": {}}]
+	doc.edges = []
+	doc.viewport = {"x": 0, "y": 0, "zoom": 1}
+	doc.settings = {}
+	doc.insert()
+	return doc.name
