@@ -9,6 +9,7 @@ import frappe
 from itsuperapp.agent_flow.node_registry import all_node_types
 from itsuperapp.agent_flow.runtime import cancel_flow_run as _cancel_flow_run
 from itsuperapp.agent_flow.runtime import resume_flow_run as _resume_flow_run
+from itsuperapp.agent_flow.runtime import resume_flow_run_with_token as _resume_flow_run_with_token
 from itsuperapp.agent_flow.runtime import start_flow_run as _start_flow_run
 
 
@@ -44,3 +45,12 @@ def resume_flow_run(run_name: str) -> None:
 def cancel_flow_run(run_name: str) -> None:
 	"""Cancel a Flow Run (issue #48) -- see runtime.cancel_flow_run."""
 	_cancel_flow_run(run_name)
+
+
+@frappe.whitelist(allow_guest=False)
+def resume_flow_run_with_token(run_name: str, token: str) -> None:
+	"""Resume a Human Approval Waiting Flow Run via its resume token
+	(issue #50) -- see runtime.resume_flow_run_with_token. Requires an
+	authenticated (non-Guest) session; the token itself, not the caller's
+	own roles, authorizes this specific resume."""
+	_resume_flow_run_with_token(run_name, token)

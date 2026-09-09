@@ -39,7 +39,9 @@ an in-flight node execution itself.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import secrets
 import time
 from typing import Any
 
@@ -47,7 +49,7 @@ import frappe
 
 from itsuperapp.agent_flow.authorization import authorize_node_operation
 from itsuperapp.agent_flow.identity import resolve_execution_identity
-from itsuperapp.agent_flow.node_registry import get_executor
+from itsuperapp.agent_flow.node_registry import all_node_types, get_executor
 from itsuperapp.itsuperapp.doctype.flow_version.flow_version import as_obj
 
 DEFAULT_MAX_STEPS = 100
@@ -56,16 +58,37 @@ DEFAULT_RETRY_DELAY_MS = 0
 MAX_RETRY_DELAY_MS = 30_000
 MAX_RETRY_ATTEMPTS = 10  # bounds a node config's own retry_attempts -- a runaway-retry circuit breaker
 RESUMABLE_ROLES = frozenset({"System Manager"})
+DEFAULT_APPROVAL_EXPIRY_HOURS = 72
 
 
 class NodeWaiting(Exception):
 	"""Raised by an executor to pause the run (e.g. pending human approval).
 
-	Wave 2 provides only the runtime contract/state for this -- pausing,
-	persisting Waiting, and a generic `resume_flow_run()` that continues
-	the graph walk. A real token-authenticated approval node with its own
-	payload is issue #50/#51 scope, not built here.
+	Plain `NodeWaiting()` (no args) gets the generic Wave 2 contract: the
+	step/run pause as Waiting, resumable only by `resume_flow_run()`
+	(execution identity or System Manager, no token).
+
+	`NodeWaiting(approver=..., subject=...)` additionally requests issue
+	#50's secure Human Approval flow: the runtime generates a
+	cryptographically random, single-use, run/step-scoped token (never
+	stored in plaintext -- only its sha256 hash), notifies `approver` via
+	Frappe's native Notification Log with a resume link carrying the
+	token, and the run becomes resumable via `resume_flow_run_with_token()`
+	-- token possession is itself the authorization for that specific
+	action, independent of the caller's own roles.
 	"""
+
+	def __init__(
+		self,
+		*,
+		approver: str | None = None,
+		subject: str | None = None,
+		expires_in_hours: int = DEFAULT_APPROVAL_EXPIRY_HOURS,
+	):
+		super().__init__("Flow Run paused, awaiting resume.")
+		self.approver = approver
+		self.subject = subject or "Flow Run awaiting your approval"
+		self.expires_in_hours = expires_in_hours
 
 
 def start_flow_run(flow_definition: str, config: dict | str | None = None) -> str:
@@ -189,7 +212,7 @@ def _resume_state(run, nodes: dict, edges: list) -> tuple[list[str], dict]:
 	node_id = waiting_step.node_id
 	waiting_step.status = "Success"
 	waiting_step.finished_at = frappe.utils.now_datetime()
-	waiting_step.save()
+	waiting_step.save(ignore_permissions=True)  # bookkeeping write -- see _create_step's docstring
 	pending = _next_nodes(edges, node_id, "out")
 	return pending, context
 
@@ -255,6 +278,20 @@ def _walk(
 		)
 
 
+def _node_operation(node_type: str) -> str:
+	"""Derive the operation to check at the centralized authorization gate
+	from the node type's own registered `allowed_operations` (issue #50):
+	a node with exactly one declared operation (e.g. `frappe_create_document`
+	-> "create") is checked against that operation specifically, so the
+	Frappe-permission layer below is meaningful for it. A node with no
+	declared operations (e.g. `noop`, `logic_condition`) -- or, in
+	principle, more than one -- falls back to the generic "execute",
+	which every empty-`allowed_operations` node trivially satisfies.
+	"""
+	allowed = (all_node_types().get(node_type) or {}).get("allowed_operations") or []
+	return allowed[0] if len(allowed) == 1 else "execute"
+
+
 def _execute_node_with_retry(
 	run, flow_version, node: dict, step_index: int, context: dict
 ) -> tuple[str, dict]:
@@ -264,7 +301,9 @@ def _execute_node_with_retry(
 		execution_identity=run.execution_identity,
 		flow_definition=flow_version.flow_definition,
 		node_type=node_type,
-		operation="execute",
+		operation=_node_operation(node_type),
+		doctype=config.get("doctype"),
+		doc=config.get("name"),
 	)
 	executor = get_executor(node_type)
 	retry_attempts = min(config.get("retry_attempts", DEFAULT_RETRY_ATTEMPTS), MAX_RETRY_ATTEMPTS)
@@ -276,8 +315,10 @@ def _execute_node_with_retry(
 		started = time.monotonic()
 		try:
 			result = executor.execute(dict(context), config)
-		except NodeWaiting:
+		except NodeWaiting as waiting:
 			_finish_step(step, "Waiting", started, output=None, error=None)
+			if waiting.approver:
+				_create_approval_token(step, waiting)
 			raise
 		except Exception as exc:  # classify as a retryable node failure
 			last_error = exc
@@ -297,6 +338,26 @@ def _execute_node_with_retry(
 
 
 def _create_step(run, node: dict, step_index: int, attempt: int, context: dict):
+	"""Bookkeeping write. `_create_step`/`_finish_step`/`_transition_run`/
+	`_resume_state`'s Flow Run Step save all use `ignore_permissions=True`
+	deliberately: these are the *runtime's own* framework-owned audit-
+	trail records (analogous to Frappe's own internal Error Log/Version
+	writes), not a node's business-document operation -- the distinction
+	the "never ignore_permissions" rule in ADR 0012's Security Model is
+	about. A node's own Frappe operations (Create/Update/Submit/Read,
+	Assignment, Notification, Workflow Action) never bypass permissions;
+	only recording that a step ran (or failed) does.
+
+	This matters concretely: an execution identity can legitimately be a
+	low-privileged user with no access to the Flow Run/Flow Run Step
+	doctypes themselves (they're System-Manager-only per #48's schema) --
+	but their run's own outcome must still be recorded, including a
+	denial. Without this, a low-privileged identity's run would fail to
+	even record its own Failed status, masking the real authorization
+	denial behind an unrelated PermissionError on the bookkeeping write
+	itself (confirmed empirically while testing issue #50's real,
+	non-privileged node-permission-denial scenarios).
+	"""
 	step = frappe.new_doc("Flow Run Step")
 	step.flow_run = run.name
 	step.step_index = step_index
@@ -306,7 +367,7 @@ def _create_step(run, node: dict, step_index: int, attempt: int, context: dict):
 	step.attempt = attempt
 	step.started_at = frappe.utils.now_datetime()
 	step.input_snapshot = json.dumps(context, sort_keys=True)
-	step.insert()
+	step.insert(ignore_permissions=True)
 	return step
 
 
@@ -318,7 +379,7 @@ def _finish_step(step, status: str, started_monotonic: float, output: dict | Non
 		step.output_snapshot = json.dumps(output, sort_keys=True)
 	if error is not None:
 		step.error = error
-	step.save()
+	step.save(ignore_permissions=True)  # bookkeeping write -- see _create_step's docstring
 	_commit_unless_testing()
 
 
@@ -353,7 +414,7 @@ def _transition_run(
 		run.started_at = started_at
 	if finished_at is not None:
 		run.finished_at = finished_at
-	run.save()
+	run.save(ignore_permissions=True)  # bookkeeping write -- see _create_step's docstring
 	_commit_unless_testing()
 
 
@@ -367,6 +428,11 @@ def resume_flow_run(run_name: str) -> None:
 	a given run (a second, concurrent resume call affects zero rows and
 	is rejected)."""
 	_authorize_run_control(run_name)
+	_flip_run_waiting_to_running_or_throw(run_name)
+	frappe.enqueue(execute_flow_run, queue="default", run_name=run_name)
+
+
+def _flip_run_waiting_to_running_or_throw(run_name: str) -> None:
 	frappe.db.sql(
 		"UPDATE `tabFlow Run` SET `status`=%s, `modified`=%s WHERE `name`=%s AND `status`=%s",
 		("Running", frappe.utils.now(), run_name, "Waiting"),
@@ -381,7 +447,99 @@ def resume_flow_run(run_name: str) -> None:
 	# rollback (confirmed: it left committed test users/Flow Runs behind).
 	if affected == 0:
 		frappe.throw(frappe._("Flow Run {0} is not Waiting (already resumed or terminal).").format(run_name))
+
+
+def _create_approval_token(step, waiting: "NodeWaiting") -> None:
+	"""Generate issue #50's Human Approval token: cryptographically
+	random (secrets.token_urlsafe, 256 bits), never stored in plaintext
+	(only its sha256 hash is persisted), scoped to this exact step, with
+	a defensible expiry. Notifies `waiting.approver` via Frappe's native
+	Notification Log (no custom notification engine) with a resume link
+	carrying the plaintext token -- the only place it ever exists outside
+	this function's local variable and the notified user's inbox.
+	"""
+	token = secrets.token_urlsafe(32)
+	token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+	expires_at = frappe.utils.add_to_date(frappe.utils.now_datetime(), hours=waiting.expires_in_hours)
+
+	frappe.db.set_value(
+		"Flow Run Step",
+		step.name,
+		{"approval_token_hash": token_hash, "approval_expires_at": expires_at},
+	)
+
+	from frappe.desk.doctype.notification_log.notification_log import enqueue_create_notification
+
+	resume_url = frappe.utils.get_url(
+		f"/api/method/itsuperapp.agent_flow.api.resume_flow_run_with_token"
+		f"?run_name={step.flow_run}&token={token}"
+	)
+	enqueue_create_notification(
+		users=[waiting.approver],
+		doc={
+			"type": "Alert",
+			"subject": waiting.subject,
+			"document_type": "Flow Run",
+			"document_name": step.flow_run,
+			"email_content": frappe._("Approve by visiting: {0}").format(resume_url),
+			"from_user": frappe.session.user,
+		},
+	)
+
+
+def resume_flow_run_with_token(run_name: str, token: str) -> None:
+	"""Resume a Human Approval Waiting run via its token (whitelisted in
+	api.py, `allow_guest=False` -- an authenticated session is required,
+	so this is never a public unauthenticated resume). Unlike
+	`resume_flow_run`, possession of the correct, unexpired, unused token
+	scoped to this run's current Waiting step is itself the authorization
+	-- the caller need not be the execution identity or a System Manager,
+	since a real external approver may be neither.
+	"""
+	if frappe.session.user == "Guest":
+		frappe.throw(frappe._("Authentication required."), frappe.PermissionError)
+
+	waiting_step_name = frappe.db.get_value(
+		"Flow Run Step",
+		{"flow_run": run_name, "status": "Waiting"},
+		"name",
+		order_by="creation desc",
+	)
+	if not waiting_step_name:
+		frappe.throw(frappe._("Flow Run {0} is not Waiting.").format(run_name))
+
+	_verify_and_consume_approval_token(waiting_step_name, token)
+	_flip_run_waiting_to_running_or_throw(run_name)
 	frappe.enqueue(execute_flow_run, queue="default", run_name=run_name)
+
+
+def _verify_and_consume_approval_token(step_name: str, token: str) -> None:
+	step = frappe.db.get_value(
+		"Flow Run Step",
+		step_name,
+		["approval_token_hash", "approval_expires_at", "approval_used_at"],
+		as_dict=True,
+	)
+	if not step or not step.approval_token_hash:
+		frappe.throw(frappe._("No approval token is pending for this run."), frappe.PermissionError)
+	if step.approval_used_at:
+		frappe.throw(frappe._("This approval token has already been used."), frappe.PermissionError)
+	if step.approval_expires_at and frappe.utils.now_datetime() > step.approval_expires_at:
+		frappe.throw(frappe._("This approval token has expired."), frappe.PermissionError)
+
+	submitted_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+	if not secrets.compare_digest(submitted_hash, step.approval_token_hash):
+		frappe.throw(frappe._("Invalid approval token."), frappe.PermissionError)
+
+	# Atomic single-use guard, mirroring the run-level anti-replay pattern:
+	# only the caller whose UPDATE actually flips a NULL approval_used_at
+	# wins; a concurrent second submission of the same token affects 0 rows.
+	frappe.db.sql(
+		"UPDATE `tabFlow Run Step` SET `approval_used_at`=%s WHERE `name`=%s AND `approval_used_at` IS NULL",
+		(frappe.utils.now(), step_name),
+	)
+	if frappe.db.sql("SELECT ROW_COUNT()")[0][0] == 0:
+		frappe.throw(frappe._("This approval token has already been used."), frappe.PermissionError)
 
 
 def cancel_flow_run(run_name: str) -> None:
