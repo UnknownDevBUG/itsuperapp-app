@@ -44,6 +44,7 @@ def node(
 	config_schema: list[dict[str, Any]] | None = None,
 	permissions: list[str] | None = None,
 	capabilities: list[str] | None = None,
+	allowed_operations: list[str] | None = None,
 ):
 	"""Register an executor class under a canonical node `type_name`.
 
@@ -51,6 +52,14 @@ def node(
 	table exactly. `version` is bumped on a breaking `config_schema`
 	change -- this field is the direct fix for the node-type drift bug
 	found in FlowAgent's `VALID_NODE_TYPES` (STEP 2 finding).
+
+	`allowed_operations` is the fourth permission-gate layer from ADR 0012's
+	Security Model ("Allowed operation" -- issue #49): the specific
+	operations (e.g. "read", "write", "submit") this node type may request
+	through `authorization.authorize_node_operation()`. `None`/empty means
+	no restriction beyond the other three layers -- most nodes (including
+	both example nodes in this package) don't touch a Frappe document at
+	all, so they have nothing to restrict here.
 
 	Raises NodeRegistrationError if `type_name` is already registered --
 	registration failure is loud, never silent (acceptance criterion).
@@ -79,6 +88,7 @@ def node(
 			"permissions": permissions or [],
 			"executor": f"{executor_cls.__module__}.{executor_cls.__qualname__}",
 			"capabilities": capabilities or [],
+			"allowed_operations": allowed_operations or [],
 		}
 		executor_cls.node_type = type_name
 		return executor_cls
