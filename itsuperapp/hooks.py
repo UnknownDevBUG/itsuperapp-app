@@ -200,6 +200,9 @@ after_install = "itsuperapp.install.after_install"
 
 agent_flow_nodes = [
 	"itsuperapp.agent_flow.nodes.example_nodes",
+	"itsuperapp.agent_flow.nodes.frappe_nodes",
+	"itsuperapp.agent_flow.nodes.logic_nodes",
+	"itsuperapp.agent_flow.nodes.human_nodes",
 ]
 
 # Testing

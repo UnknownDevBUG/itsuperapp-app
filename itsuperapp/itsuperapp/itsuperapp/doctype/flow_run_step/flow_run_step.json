@@ -21,7 +21,12 @@
   "input_snapshot",
   "column_break_step_data",
   "output_snapshot",
-  "error"
+  "error",
+  "section_break_approval",
+  "approval_token_hash",
+  "column_break_approval",
+  "approval_expires_at",
+  "approval_used_at"
  ],
  "fields": [
   {
@@ -133,6 +138,36 @@
    "fieldname": "error",
    "fieldtype": "Small Text",
    "label": "Error",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_approval",
+   "fieldtype": "Section Break",
+   "label": "Human Approval"
+  },
+  {
+   "description": "sha256 hash of the resume token -- the plaintext token itself is never stored (issue #50's Human Approval security design).",
+   "fieldname": "approval_token_hash",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_approval",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approval_expires_at",
+   "fieldtype": "Datetime",
+   "label": "Approval Expires At",
+   "read_only": 1
+  },
+  {
+   "description": "Set once the token is successfully consumed -- enforces single-use (a second resume attempt with the same token is rejected).",
+   "fieldname": "approval_used_at",
+   "fieldtype": "Datetime",
+   "label": "Approval Used At",
    "read_only": 1
   }
  ],
