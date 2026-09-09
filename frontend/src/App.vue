@@ -47,7 +47,9 @@ const colorModeLabel: Record<typeof preference.value, string> = {
 			<header
 				class="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-6 dark:border-gray-800 dark:bg-gray-950"
 			>
-				<span class="text-sm font-medium text-gray-600 dark:text-gray-300">ITSUPERAPP</span>
+				<span class="text-sm font-medium text-gray-600 dark:text-gray-300"
+					>ITSUPERAPP</span
+				>
 				<button
 					type="button"
 					class="flex items-center gap-2 rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"

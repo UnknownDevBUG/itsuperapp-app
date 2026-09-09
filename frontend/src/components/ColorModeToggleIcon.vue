@@ -54,7 +54,14 @@ const isMonitor = computed(() => props.mode === 'system')
 			</mask>
 			<circle cx="12" cy="12" r="8" fill="currentColor" mask="url(#moon-mask)" />
 			<circle class="moon-crater" cx="9" cy="15" r="1" fill="currentColor" opacity="0.35" />
-			<circle class="moon-crater" cx="7.5" cy="11.5" r="0.6" fill="currentColor" opacity="0.35" />
+			<circle
+				class="moon-crater"
+				cx="7.5"
+				cy="11.5"
+				r="0.6"
+				fill="currentColor"
+				opacity="0.35"
+			/>
 		</g>
 
 		<!-- Monitor: screen + stand, drawn with real geometry (not an emoji). -->
@@ -69,7 +76,15 @@ const isMonitor = computed(() => props.mode === 'system')
 				stroke-width="1.6"
 				fill="none"
 			/>
-			<line x1="9" y1="20" x2="15" y2="20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+			<line
+				x1="9"
+				y1="20"
+				x2="15"
+				y2="20"
+				stroke="currentColor"
+				stroke-width="1.6"
+				stroke-linecap="round"
+			/>
 			<line x1="12" y1="16.5" x2="12" y2="20" stroke="currentColor" stroke-width="1.6" />
 		</g>
 	</svg>
@@ -87,9 +102,7 @@ const isMonitor = computed(() => props.mode === 'system')
 	opacity: 0;
 	transform-origin: 12px 12px;
 	transform: scale(0.6) rotate(-40deg);
-	transition:
-		opacity 220ms ease,
-		transform 260ms ease;
+	transition: opacity 220ms ease, transform 260ms ease;
 }
 
 .sun-glyph.is-active,

@@ -17,6 +17,8 @@ const ping = createResource({
 		<p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
 			Frontend shell scaffold (ADR 0006). No domain module UI yet.
 		</p>
-		<pre class="rounded bg-gray-100 p-4 text-xs dark:bg-gray-800 dark:text-gray-200">{{ ping.data }}</pre>
+		<pre class="rounded bg-gray-100 p-4 text-xs dark:bg-gray-800 dark:text-gray-200">{{
+			ping.data
+		}}</pre>
 	</div>
 </template>
