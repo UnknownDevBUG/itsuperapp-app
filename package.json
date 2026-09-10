@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "npm --prefix frontend run dev",
     "build": "yarn --cwd frontend install --check-files && npm --prefix frontend run build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@vue-flow/background": "^1.3.2",
@@ -15,6 +16,7 @@
     "pinia": "^4.0.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/devtools-api": "^8.2.1",
     "@vue/test-utils": "^2.5.0",

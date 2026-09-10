@@ -1,0 +1,167 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-09-10 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "field_order": [
+  "flow_definition",
+  "enabled",
+  "trigger_type",
+  "column_break_core",
+  "service_user",
+  "section_break_doctype_event",
+  "event_doctype",
+  "event_name",
+  "section_break_schedule",
+  "cron_format",
+  "column_break_schedule",
+  "last_run",
+  "section_break_webhook",
+  "webhook_key",
+  "column_break_webhook",
+  "webhook_secret"
+ ],
+ "fields": [
+  {
+   "fieldname": "flow_definition",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Flow Definition",
+   "options": "Flow Definition",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "trigger_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Trigger Type",
+   "options": "DocType Event\nSchedule\nWebhook",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_core",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Trusted, admin-configured execution identity. Required for every trigger type -- for DocType Event this is the fail-closed fallback if the real triggering user (the one whose save/submit fired the event) doesn't resolve to a valid identity; for Schedule/Webhook it is the *only* identity source, since neither has a real interactive triggering user. Never Administrator, never Guest (enforced in validate()).",
+   "fieldname": "service_user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Service User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.trigger_type == 'DocType Event'",
+   "fieldname": "section_break_doctype_event",
+   "fieldtype": "Section Break",
+   "label": "DocType Event"
+  },
+  {
+   "fieldname": "event_doctype",
+   "fieldtype": "Link",
+   "label": "DocType",
+   "mandatory_depends_on": "eval:doc.trigger_type == 'DocType Event'",
+   "options": "DocType"
+  },
+  {
+   "description": "Allowlisted events only -- never an arbitrary Python hook method name.",
+   "fieldname": "event_name",
+   "fieldtype": "Select",
+   "label": "Event",
+   "mandatory_depends_on": "eval:doc.trigger_type == 'DocType Event'",
+   "options": "after_insert\non_update\non_submit\non_cancel\non_trash\non_update_after_submit"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.trigger_type == 'Schedule'",
+   "fieldname": "section_break_schedule",
+   "fieldtype": "Section Break",
+   "label": "Schedule"
+  },
+  {
+   "description": "Standard 5-field cron expression, validated via croniter at save time.",
+   "fieldname": "cron_format",
+   "fieldtype": "Data",
+   "label": "Cron Format",
+   "mandatory_depends_on": "eval:doc.trigger_type == 'Schedule'"
+  },
+  {
+   "fieldname": "column_break_schedule",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Updated each time this trigger fires. A single shared, native Frappe Scheduled Job Type record (created once at migrate time -- see itsuperapp.agent_flow.triggers) re-checks every enabled Schedule trigger's cron_format against this field each minute; no per-trigger scheduled job is created (issue #62 -- reuses Frappe's own scheduler, no custom cron engine).",
+   "fieldname": "last_run",
+   "fieldtype": "Datetime",
+   "label": "Last Run",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.trigger_type == 'Webhook'",
+   "fieldname": "section_break_webhook",
+   "fieldtype": "Section Break",
+   "label": "Webhook"
+  },
+  {
+   "description": "Auto-generated, unguessable path segment scoping this trigger's webhook URL -- not secret itself (safe to display/copy), only the HMAC secret below is.",
+   "fieldname": "webhook_key",
+   "fieldtype": "Data",
+   "label": "Webhook Key",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_webhook",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "HMAC-SHA256 signing secret for inbound webhook requests. Encrypted at rest (Password fieldtype) -- never a plaintext Data field.",
+   "fieldname": "webhook_secret",
+   "fieldtype": "Password",
+   "label": "Webhook Secret",
+   "mandatory_depends_on": "eval:doc.trigger_type == 'Webhook'"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-09-10 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITSUPERAPP",
+ "name": "Agent Flow Trigger",
+ "naming_rule": "By fieldname",
+ "autoname": "hash",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

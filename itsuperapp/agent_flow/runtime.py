@@ -117,11 +117,29 @@ def create_flow_run(
 	triggering_user: str | None = None,
 	service_user: str | None = None,
 	configured_user: str | None = None,
+	agent_flow_trigger: str | None = None,
+	trigger_doctype: str | None = None,
+	trigger_reference: str | None = None,
+	trigger_depth: int = 0,
+	system_triggered: bool = False,
 ) -> str:
 	"""Create a Flow Run against the *latest* Flow Version of `flow_definition`
 	and resolve its execution identity, recording it either way. Fails
 	closed: if no identity resolves, the run is created directly as
 	Failed with an explicit error, never started, per the Security Model.
+
+	`system_triggered=True` (issue #62: DocType Event/Schedule/Webhook
+	dispatch, never the Manual Run API) inserts with `ignore_permissions`
+	-- deliberately, narrowly scoped, and distinct from a node's own
+	business-document operations (which never bypass permissions, see
+	authorization.py): an automatic trigger's authorization already
+	happened when the Agent Flow Trigger record itself was created
+	(System-Manager-only) and its service_user validated, so the actual
+	firing (a doc_events wildcard hook, a scheduler tick, a validated
+	webhook) is the *system* faithfully executing an already-authorized
+	configuration, not a fresh ad-hoc user action needing its own
+	permission check -- the same reasoning already applied to Flow Run
+	Step's bookkeeping writes in issue #50.
 	"""
 	flow_version_name = _latest_flow_version(flow_definition)
 	execution_identity = resolve_execution_identity(
@@ -136,9 +154,13 @@ def create_flow_run(
 	run.config_snapshot = json.dumps(config, sort_keys=True)
 	run.input = json.dumps(config, sort_keys=True)
 	run.status = "Queued"
+	run.agent_flow_trigger = agent_flow_trigger
+	run.trigger_doctype = trigger_doctype
+	run.trigger_reference = trigger_reference
+	run.trigger_depth = trigger_depth
 	if execution_identity:
 		run.execution_identity = execution_identity
-	run.insert()
+	run.insert(ignore_permissions=system_triggered)
 
 	if not execution_identity:
 		_transition_run(
@@ -186,11 +208,20 @@ def execute_flow_run(run_name: str) -> None:
 		pending, context = _resume_state(run, nodes, edges)
 
 	original_user = frappe.session.user
+	original_depth = getattr(frappe.flags, "agent_flow_trigger_depth", None)
 	try:
 		frappe.set_user(run.execution_identity)
+		# Issue #62 loop protection: visible to itsuperapp.agent_flow.triggers'
+		# on_doctype_event() for the duration of this run's own node
+		# execution -- a node's document operation (e.g. Update Document)
+		# fires synchronously within this same call stack, so a doc_events
+		# handler it triggers can read this run's own depth and refuse to
+		# chain further once MAX_TRIGGER_DEPTH is exceeded.
+		frappe.flags.agent_flow_trigger_depth = run.trigger_depth or 0
 		_walk(run, flow_version, nodes, edges, settings, pending, context)
 	finally:
 		frappe.set_user(original_user)
+		frappe.flags.agent_flow_trigger_depth = original_depth
 
 
 def _entry_nodes(nodes: dict, edges: list) -> list[str]:
