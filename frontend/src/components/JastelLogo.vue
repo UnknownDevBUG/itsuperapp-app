@@ -185,7 +185,7 @@ const taglineColor = computed(() =>
 		transform: translate(36.632px, 53.655px);
 	}
 	41.667% {
-		transform: translate(21.353px, 55.530px);
+		transform: translate(21.353px, 55.53px);
 	}
 	50% {
 		transform: translate(13.748px, 51.904px);
@@ -222,7 +222,7 @@ const taglineColor = computed(() =>
 		opacity: 1;
 	}
 	91.667% {
-		transform: translate(78.647px, 14.470px);
+		transform: translate(78.647px, 14.47px);
 	}
 	100% {
 		transform: translate(86.252px, 18.096px);

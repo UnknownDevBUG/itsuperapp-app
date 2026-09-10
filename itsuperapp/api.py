@@ -157,4 +157,3 @@ def _guess_mime_type(filename: str) -> str:
 	if lowered.endswith(".webp"):
 		return "image/webp"
 	raise ValueError(f"Unsupported file type for extraction: {filename}")
-
