@@ -21,6 +21,23 @@ IGNORE_TEST_RECORD_DEPENDENCIES = ["User"]
 
 
 class TestHumanApproval(FrappeTestCase):
+	def setUp(self):
+		# Approval notifications attempt a real email send in this dev
+		# environment (no SMTP configured), which Frappe logs to Error
+		# Log -- and Error Log's own controller commits explicitly in some
+		# code paths, escaping FrappeTestCase's rollback (confirmed
+		# empirically -- see issue #62's Wave 4 test-isolation findings).
+		# Clean up anything created during this test explicitly, rather
+		# than relying on rollback for this specific doctype.
+		self._error_log_watermark = frappe.utils.now_datetime()
+		self.addCleanup(self._cleanup_error_logs)
+
+	def _cleanup_error_logs(self):
+		for name in frappe.get_all(
+			"Error Log", filters={"creation": (">=", self._error_log_watermark)}, pluck="name"
+		):
+			frappe.delete_doc("Error Log", name, ignore_permissions=True, force=True)
+
 	def _make_user(self, email, *, roles=("System Manager",)):
 		user = frappe.new_doc("User")
 		user.email = email

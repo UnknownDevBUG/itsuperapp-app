@@ -161,35 +161,45 @@ after_install = "itsuperapp.install.after_install"
 # Document Events
 # ---------------
 # Hook on document methods and events
-
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+#
+# Agent Flow DocType Event triggers (issue #62): a single wildcard
+# handler for every doctype's matching event, per the evidence recorded
+# in itsuperapp.agent_flow.triggers's own module docstring (Frappe's
+# doc_events are static per-process hook registrations -- there is no
+# way to register a *new* hook entry per Agent Flow Trigger record at
+# runtime, so the handler itself does a fast, indexed lookup for a
+# matching enabled trigger instead). Only the allowlisted events in
+# itsuperapp.agent_flow.triggers.ALLOWED_DOCTYPE_EVENTS are ever acted
+# on; every other event this wildcard receives is a fast no-op.
+doc_events = {
+	"*": {
+		"after_insert": "itsuperapp.agent_flow.triggers.on_doctype_event",
+		"on_update": "itsuperapp.agent_flow.triggers.on_doctype_event",
+		"on_submit": "itsuperapp.agent_flow.triggers.on_doctype_event",
+		"on_cancel": "itsuperapp.agent_flow.triggers.on_doctype_event",
+		"on_trash": "itsuperapp.agent_flow.triggers.on_doctype_event",
+		"on_update_after_submit": "itsuperapp.agent_flow.triggers.on_doctype_event",
+	}
+}
 
 # Scheduled Tasks
 # ---------------
+# Agent Flow Schedule triggers (issue #62) are *not* declared here as
+# static scheduler_events -- see itsuperapp.agent_flow.triggers's module
+# docstring for why a single, dynamically-created native `Scheduled Job
+# Type` record (bootstrapped idempotently in after_migrate below) is
+# used instead, reusing Frappe's own database-driven scheduler rather
+# than a custom cron engine.
 
-# scheduler_events = {
-# 	"all": [
-# 		"itsuperapp.tasks.all"
-# 	],
-# 	"daily": [
-# 		"itsuperapp.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"itsuperapp.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"itsuperapp.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"itsuperapp.tasks.monthly"
-# 	],
-# }
+# Migration hooks
+# ---------------
+# Idempotent bootstrap of the single shared Scheduled Job Type Agent
+# Flow's Schedule triggers rely on (issue #62) -- safe to run on every
+# migrate, a no-op once the record already exists.
+
+after_migrate = [
+	"itsuperapp.agent_flow.triggers.ensure_schedule_dispatcher",
+]
 
 # Agent Flow node registry
 # ------------------------

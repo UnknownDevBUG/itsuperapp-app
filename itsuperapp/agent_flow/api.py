@@ -11,6 +11,7 @@ from itsuperapp.agent_flow.runtime import cancel_flow_run as _cancel_flow_run
 from itsuperapp.agent_flow.runtime import resume_flow_run as _resume_flow_run
 from itsuperapp.agent_flow.runtime import resume_flow_run_with_token as _resume_flow_run_with_token
 from itsuperapp.agent_flow.runtime import start_flow_run as _start_flow_run
+from itsuperapp.agent_flow.triggers import webhook_endpoint as _webhook_endpoint
 
 
 @frappe.whitelist()
@@ -72,3 +73,14 @@ def create_flow_definition(flow_name: str) -> str:
 	doc.settings = {}
 	doc.insert()
 	return doc.name
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def webhook_endpoint(trigger_key: str | None = None) -> dict[str, Any]:
+	"""Inbound Agent Flow webhook trigger (issue #62) -- see
+	triggers.webhook_endpoint. `allow_guest=True` only lets the HTTP layer
+	reach this method without a login session; every request must still
+	pass real HMAC-SHA256 verification (X-Agent-Flow-Timestamp/
+	X-Agent-Flow-Signature headers) or is rejected before anything is
+	enqueued."""
+	return _webhook_endpoint(trigger_key=trigger_key)

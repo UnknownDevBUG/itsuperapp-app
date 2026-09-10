@@ -14,8 +14,10 @@
   "started_at",
   "finished_at",
   "section_break_trigger",
+  "agent_flow_trigger",
   "trigger_doctype",
   "trigger_reference",
+  "trigger_depth",
   "section_break_run_data",
   "config_snapshot",
   "input",
@@ -88,7 +90,15 @@
    "label": "Trigger Reference"
   },
   {
-   "description": "Not used by the Manual source (Wave 2's only wired trigger); schema-complete for future DocType Event/Schedule/Webhook triggers.",
+   "description": "Which Agent Flow Trigger (issue #62) caused this run -- null for Manual runs.",
+   "fieldname": "agent_flow_trigger",
+   "fieldtype": "Link",
+   "label": "Agent Flow Trigger",
+   "options": "Agent Flow Trigger",
+   "read_only": 1
+  },
+  {
+   "description": "For DocType Event runs: the DocType of the document whose event fired this run.",
    "fieldname": "trigger_doctype",
    "fieldtype": "Link",
    "label": "Trigger DocType",
@@ -96,10 +106,20 @@
    "read_only": 1
   },
   {
+   "description": "For DocType Event runs: the specific document whose event fired this run.",
    "fieldname": "trigger_reference",
    "fieldtype": "Dynamic Link",
    "label": "Trigger Reference",
    "options": "trigger_doctype",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Loop-protection depth (issue #62): 0 for Manual/directly-triggered runs; incremented by 1 each time a node's own document operation (inside this run) fires a DocType Event trigger that spawns another run. Chaining is refused once this exceeds MAX_TRIGGER_DEPTH -- see itsuperapp.agent_flow.triggers.",
+   "fieldname": "trigger_depth",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Trigger Depth",
    "read_only": 1
   },
   {
