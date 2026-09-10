@@ -124,18 +124,16 @@ class TestDocTypeEventTrigger(FrappeTestCase):
 		flow = self._make_flow()
 		trigger = self._make_trigger(flow, event_doctype="ToDo", service_user=user.name)
 
-		error_log = frappe.get_doc(
-			{"doctype": "Error Log", "method": "Wave 4 doc-event non-match"}
-		).insert(ignore_permissions=True)
+		error_log = frappe.get_doc({"doctype": "Error Log", "method": "Wave 4 doc-event non-match"}).insert(
+			ignore_permissions=True
+		)
 		# Error Log's own controller commits explicitly outside any test
 		# transaction in some code paths (confirmed empirically: this row
 		# survived FrappeTestCase's rollback) -- clean it up explicitly
 		# rather than relying on rollback, per this Wave's own "zero
 		# leftover test documents" requirement.
 		self.addCleanup(
-			lambda: frappe.delete_doc(
-				"Error Log", error_log.name, ignore_permissions=True, force=True
-			)
+			lambda: frappe.delete_doc("Error Log", error_log.name, ignore_permissions=True, force=True)
 		)
 
 		runs = frappe.get_all("Flow Run", filters={"agent_flow_trigger": trigger.name})
