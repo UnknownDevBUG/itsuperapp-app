@@ -58,34 +58,88 @@ def set_jastel_branding() -> None:
 
 
 def ensure_apps_screen_workspace() -> None:
-	"""Create a minimal Workspace so ITSUPERAPP's tile shows on /apps.
+	"""Create/update the Workspace so ITSUPERAPP's tile shows on /apps and
+	its real domain modules are reachable from /desk.
 
 	`add_to_apps_screen` in hooks.py registers ITSUPERAPP's app-switcher
 	entry (icon/favicon/splash), but Frappe v16's Apps Page tiles are
 	sourced from Workspace records linked to the app's Module Def, not
 	from the hooks.py entry alone (confirmed via multiple
 	discuss.frappe.io threads on "new app not showing on /apps" -- the
-	consistent fix is "create a workspace and link the module"). With
-	zero domain module UI yet (ADR 0006), this workspace is an
-	intentionally empty placeholder just so the tile is clickable and
-	routes somewhere sane; replace its content once a real module ships.
-	"""
-	if frappe.db.exists("Workspace", "ITSUPERAPP"):
-		return
+	consistent fix is "create a workspace and link the module").
 
+	Idempotent and re-run-safe (not just create-once): rebuilds
+	`content`/`shortcuts` unconditionally even if the Workspace already
+	exists, so a fresh `bench execute itsuperapp.install.ensure_apps_screen_workspace`
+	on an already-installed site picks up newly added DocTypes (e.g.
+	Document Extraction) without needing `bench reinstall`. A DocType
+	shortcut here is what makes it reachable by clicking through /desk
+	instead of typing /app/<doctype> directly -- Frappe does not add one
+	automatically just because a DocType exists.
+	"""
 	module_name = frappe.db.exists("Module Def", {"app_name": "itsuperapp"})
 	if not module_name:
 		return
 
-	workspace = frappe.new_doc("Workspace")
-	workspace.label = "ITSUPERAPP"
-	workspace.title = "ITSUPERAPP"
-	workspace.module = module_name
-	workspace.public = 1
-	workspace.is_hidden = 0
-	workspace.icon = "application"
-	workspace.content = (
-		'[{"id":"header","type":"header",'
-		'"data":{"text":"<span class=\\"h4\\"><b>ITSUPERAPP</b></span>","col":12}}]'
-	)
-	workspace.insert(ignore_permissions=True)
+	shortcuts: list[dict[str, str]] = []
+	if frappe.db.exists("DocType", "Document Extraction"):
+		shortcuts.append({"label": "Document Extraction", "link_to": "Document Extraction"})
+
+	content: list[dict] = [
+		{
+			"id": "header",
+			"type": "header",
+			"data": {"text": '<span class="h4"><b>ITSUPERAPP</b></span>', "col": 12},
+		}
+	]
+	if shortcuts:
+		content.append(
+			{
+				"id": "shortcuts-header",
+				"type": "header",
+				"data": {"text": '<span class="h4"><b>Shortcuts</b></span>', "col": 12},
+			}
+		)
+		for shortcut in shortcuts:
+			content.append(
+				{
+					"id": frappe.generate_hash(length=10),
+					"type": "shortcut",
+					"data": {"shortcut_name": shortcut["label"], "col": 3},
+				}
+			)
+
+	if frappe.db.exists("Workspace", "ITSUPERAPP"):
+		workspace = frappe.get_doc("Workspace", "ITSUPERAPP")
+	else:
+		workspace = frappe.new_doc("Workspace")
+		workspace.label = "ITSUPERAPP"
+		workspace.title = "ITSUPERAPP"
+		workspace.module = module_name
+		workspace.public = 1
+		workspace.is_hidden = 0
+		workspace.icon = "application"
+
+	# `parent_page` must be an empty string, not the field's default None --
+	# Frappe's sidebar builds a tree keyed on this field, and every other
+	# working top-level Workspace (Home, Users, ...) has "" here. A None
+	# (the state a workspace created before this fix landed can be stuck in)
+	# leaves it out of the tree Frappe renders into the sidebar entirely --
+	# it still exists and is directly reachable by URL, just invisible in
+	# the nav. Set unconditionally (not just on create) so re-running this
+	# on an already-installed site heals an existing bad value too.
+	workspace.parent_page = workspace.parent_page or ""
+
+	workspace.content = frappe.as_json(content)
+	workspace.set("shortcuts", [])
+	for shortcut in shortcuts:
+		workspace.append(
+			"shortcuts",
+			{
+				"type": "DocType",
+				"link_to": shortcut["link_to"],
+				"doc_view": "List",
+				"label": shortcut["label"],
+			},
+		)
+	workspace.save(ignore_permissions=True)
