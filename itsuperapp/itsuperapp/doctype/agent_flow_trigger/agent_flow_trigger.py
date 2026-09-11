@@ -20,6 +20,7 @@ avoids needing to invent a correlation mechanism Frappe doesn't provide.
 from __future__ import annotations
 
 import secrets
+from datetime import datetime
 
 import frappe
 from croniter import CroniterBadCronError, croniter
@@ -31,10 +32,13 @@ from itsuperapp.agent_flow.identity import is_valid_execution_identity
 class AgentFlowTrigger(Document):
 	def validate(self):
 		self._validate_service_user()
+		if self.trigger_type != "Schedule":
+			self.next_run = None
 		if self.trigger_type == "DocType Event":
 			self._validate_doctype_event()
 		elif self.trigger_type == "Schedule":
 			self._validate_cron()
+			self._calc_next_run()
 		elif self.trigger_type == "Webhook":
 			self._validate_webhook_secret()
 			self._ensure_webhook_key()
@@ -68,3 +72,15 @@ class AgentFlowTrigger(Document):
 	def _ensure_webhook_key(self):
 		if not self.webhook_key:
 			self.webhook_key = secrets.token_urlsafe(16)
+
+	def _calc_next_run(self):
+		"""Calculate next_run from cron_format using croniter.
+		Used by the Frappe Desk Calendar view for Schedule triggers."""
+		if not self.cron_format:
+			self.next_run = None
+			return
+		try:
+			cron = croniter(self.cron_format)
+			self.next_run = cron.get_next(datetime)
+		except (CroniterBadCronError, ValueError):
+			self.next_run = None
