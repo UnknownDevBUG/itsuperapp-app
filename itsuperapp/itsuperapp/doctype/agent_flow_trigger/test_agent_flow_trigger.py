@@ -3,7 +3,10 @@ validation: 1-6 in the required test list."""
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import frappe
+from croniter import croniter
 from frappe.tests.utils import FrappeTestCase
 
 IGNORE_TEST_RECORD_DEPENDENCIES = ["User"]
@@ -191,3 +194,39 @@ class TestAgentFlowTrigger(FrappeTestCase):
 					"event_name": "after_insert",
 				}
 			).insert(ignore_permissions=True)
+
+	def test_schedule_trigger_next_run_calculated(self):
+		"""Schedule trigger stores a croniter-derived next_run (Calendar view)."""
+		flow = self._make_flow()
+		user = self._make_user("wave4-trigger-nextrun@example.com")
+		trigger = frappe.get_doc(
+			{
+				"doctype": "Agent Flow Trigger",
+				"flow_definition": flow.name,
+				"trigger_type": "Schedule",
+				"service_user": user.name,
+				"cron_format": "0 9 * * *",
+			}
+		).insert(ignore_permissions=True)
+		self.assertIsNotNone(trigger.next_run)
+		self.assertEqual(trigger.next_run, croniter("0 9 * * *").get_next(datetime))
+
+	def test_next_run_cleared_when_trigger_type_changes(self):
+		"""next_run is only meaningful for Schedule triggers."""
+		flow = self._make_flow()
+		user = self._make_user("wave4-trigger-nextrunclear@example.com")
+		trigger = frappe.get_doc(
+			{
+				"doctype": "Agent Flow Trigger",
+				"flow_definition": flow.name,
+				"trigger_type": "Schedule",
+				"service_user": user.name,
+				"cron_format": "0 9 * * *",
+			}
+		).insert(ignore_permissions=True)
+		self.assertIsNotNone(trigger.next_run)
+
+		trigger.trigger_type = "Webhook"
+		trigger.webhook_secret = "a-real-secret-value"
+		trigger.save()
+		self.assertIsNone(trigger.next_run)

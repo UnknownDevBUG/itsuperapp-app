@@ -4,4 +4,5 @@
 
 [post_model_sync]
 itsuperapp.patches.fix_hrms_launcher_route
+itsuperapp.patches.add_next_run_to_agent_flow_trigger
 # Patches added in this section will be executed after doctypes are migrated

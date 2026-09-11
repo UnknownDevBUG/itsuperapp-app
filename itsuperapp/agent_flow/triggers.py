@@ -207,7 +207,10 @@ def run_due_schedule_triggers() -> None:
 	for trigger in triggers:
 		if not _schedule_is_due(trigger.cron_format, trigger.last_run, now):
 			continue
-		frappe.db.set_value("Agent Flow Trigger", trigger.name, "last_run", now)
+		next_fire = croniter(trigger.cron_format, now).get_next(datetime)
+		frappe.db.set_value(
+			"Agent Flow Trigger", trigger.name, {"last_run": now, "next_run": next_fire}
+		)
 		frappe.enqueue(
 			_dispatch_schedule_trigger,
 			queue="default",

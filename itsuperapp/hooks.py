@@ -49,7 +49,7 @@ web_include_css = "/assets/itsuperapp/css/login-center.css"
 # doctype_js = {"doctype" : "public/js/doctype.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
-# doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
+doctype_calendar_js = {"Agent Flow Trigger": "public/js/agent_flow_trigger_calendar.js"}
 
 # Svg Icons
 # ------------------
